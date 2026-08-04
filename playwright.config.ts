@@ -22,7 +22,16 @@ export default defineConfig({
   /* Opt out of parallel tests on CI. */
   workers: process.env.CI ? 1 : undefined,
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
-  reporter: 'html',
+  // 'html': el reporte visual que ya usas con "npx playwright show-report".
+  // 'junit': un archivo XML adicional, pensado para que herramientas externas
+  //          (como trcli) lo lean y publiquen el resultado en TestRail.
+  // embedAnnotationsAsProperties: true hace que las "annotations" que agregamos
+  //          en los hooks afterEach (ver los archivos .spec.ts) queden escritas
+  //          dentro del junit.xml como <property>, que es donde trcli las busca.
+  reporter: [
+    ['html'],
+    ['junit', { outputFile: 'test-results/junit.xml', embedAnnotationsAsProperties: true }]
+  ],
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
