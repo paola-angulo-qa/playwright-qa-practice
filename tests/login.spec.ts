@@ -69,6 +69,48 @@ test.describe('SauceDemo - Login', () => {
   });
 
   // [Playwright Test]
+  // afterEach se ejecuta DESPUÉS DE CADA test de este describe, sin importar
+  // si pasó o falló. DECISIÓN DE DISEÑO: aquí capturamos evidencia SIEMPRE,
+  // en ambos resultados, no solo en la falla. Esto es distinto a lo que
+  // hace la mayoría de los pipelines de automatización (que solo capturan
+  // en la falla, para depurar), pero se alinea con una práctica de
+  // certificación de evidencia: dejar registro visual de que CADA caso se
+  // ejecutó, con su resultado real, sin importar si pasó o falló.
+  test.afterEach(async ({ page }, testInfo) => {
+
+    // [TypeScript + Playwright Test]
+    // testInfo es una fixture que Playwright entrega con metadata del test
+    // recién ejecutado: nombre, duración y resultado (status). La usamos
+    // aquí solo para decidir el NOMBRE del archivo, ya no para decidir si
+    // capturamos o no — eso ya no depende del resultado.
+    const outcome = testInfo.status === testInfo.expectedStatus ? 'passed' : 'failed';
+
+    // [Playwright API]
+    // outputPath() genera una ruta dentro de test-results/ exclusiva de
+    // este test, para que dos tests distintos no se sobrescriban la
+    // captura entre sí. El nombre incluye el resultado ("passed"/"failed")
+    // para que la evidencia sea identificable de un vistazo.
+    const screenshotPath = testInfo.outputPath(`${outcome}.png`);
+
+    // [Playwright API]
+    // Capturamos la pantalla tal como quedó al terminar el test, sea cual
+    // sea el resultado.
+    await page.screenshot({ path: screenshotPath });
+
+    // [Playwright Test]
+    // testInfo.annotations es un arreglo donde Playwright permite agregar
+    // metadata adicional al resultado. 'testrail_attachment' no es una
+    // palabra reservada de Playwright: es la convención que trcli reconoce
+    // al leer el junit.xml, gracias a embedAnnotationsAsProperties en
+    // playwright.config.ts. Al quedar fuera del "if", esta anotación se
+    // agrega para TODOS los tests, no solo para los que fallan.
+    testInfo.annotations.push({
+      type: 'testrail_attachment',
+      description: screenshotPath,
+    });
+  });
+
+  // [Playwright Test]
   // test(...) define un caso de prueba.
   // Primer argumento: nombre del caso (aparece en el reporte).
   // Segundo argumento: función asíncrona con los pasos del test.

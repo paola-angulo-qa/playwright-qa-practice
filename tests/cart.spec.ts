@@ -67,6 +67,20 @@ test.describe('SauceDemo - Carrito', () => {
   });
 
   // [Playwright Test]
+  // afterEach se ejecuta DESPUÉS DE CADA test de este describe. Capturamos
+  // evidencia SIEMPRE (pase o falle el test) — mismo criterio de
+  // certificación de evidencia que en login.spec.ts, no solo depuración.
+  test.afterEach(async ({ page }, testInfo) => {
+    const outcome = testInfo.status === testInfo.expectedStatus ? 'passed' : 'failed';
+    const screenshotPath = testInfo.outputPath(`${outcome}.png`);
+    await page.screenshot({ path: screenshotPath });
+    testInfo.annotations.push({
+      type: 'testrail_attachment',
+      description: screenshotPath,
+    });
+  });
+
+  // [Playwright Test]
   // Caso que prueba agregar un producto al carrito.
   test('C49 - Agregar producto al carrito', async ({ page }) => {
 
